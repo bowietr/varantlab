@@ -41,7 +41,7 @@ function chart() {
 }
 async function load() {
  if(!validSymbol){el('symbol').textContent='Geçersiz varant kodu';el('detailStatus').textContent='Listeye dönerek bir varant seçin.';el('detailRefresh').disabled=true;return;}
- el('symbol').textContent=symbol;document.title=`${symbol} · VarantLab`;
+ el('planLink').href='/plan.html?symbol='+encodeURIComponent(symbol);el('symbol').textContent=symbol;document.title=`${symbol} · VarantLab`;
  el('detailRefresh').disabled=true;el('detailError').hidden=true;
  try {
   const response=await fetch('/api/quotes',{signal:AbortSignal.timeout(20000)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Veri alınamadı.');

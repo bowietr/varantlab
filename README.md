@@ -82,3 +82,11 @@ Kaynaklar: https://infoyatirim.com/urunler/varant ; https://varant.akyatirim.com
 ## Sade karşılaştırma ekranı (0.6.2)
 
 Ana ekranda tutar, dayanak ve beklenti seçilir. Varsayılan sıralama senaryoya göre net getiridir. Hareket büyüklüğü pozitif girilir; yükseliş/düşüş işaretini beklenti seçimi belirler. Varsayılan %1 ve 4 saat tek satırda görünür, açılarak değiştirilebilir. Model ve ön eleme ayarları gelişmiş bölümündedir. Listede net sonuç TL/yüzde, ters hareket sonucu TL/yüzde, makas maliyeti ve filtre gerekçesi görünür. Negatif sonuçlar da açıkça gösterilir. Pozitif aday yoksa bu durum belirtilir. Teknik veri sütunları detay sayfasında korunur.
+
+## İşlem Planı ve sanal günlük (0.7.0)
+
+`/plan.html` ekranı ve varant detayından kodla açılabilen işlem planı. Kullanıcı dayanak giriş/hedef/stop seviyelerini, en geç çıkış tarih/saatini (Europe/Istanbul), toplam bütçeyi, azami planlanan kaybı ve komisyonu girer. Varsayılan zarar bütçesi veya hedef/stop uydurulmaz. Kalan süre önümüzdeki 24 saat içinde olmalıdır. Yükselişte stop < giriş < hedef, düşüşte hedef < giriş < stop doğrulanır.
+
+Kullanıcı giriş seviyesindeki teorik varant fiyatı mevcut model oynaklığı ve sabit makasla yeniden hesaplanır; bu varsayımsal giriş fiyatıdır. Giriş beklenirken geçen süre modellenmez. Adet, giriş komisyonu dahil nakit sınırı ile stop senaryosundaki birim kayıptan hesaplanan risk sınırının küçüğüdür. Hedef, yatay ve stop için aynı bekleme süresi kullanılır. Sonuçlar garanti stop fiyatları veya azami gerçek zarar değildir. Toplam yatırılan tutarın tamamı kaybedilebilir.
+
+Planlar yalnızca bu tarayıcıya sanal günlük olarak kaydedilir; gerçek emir verilmez. Sanal kapanış fiyatını kullanıcı girer ve kapanış komisyonu dahil net sonuç hesaplanır. JSON yedeği indirilebilir; otomatik eşitleme, otomatik stop veya otomatik son saat kapatması yoktur. En fazla 100 kayıt tutulur; sınırda kayıtlar sessizce silinmez.
