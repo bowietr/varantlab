@@ -5,7 +5,7 @@ export default {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
     if (request.method !== 'GET') return json({error:'Yalnızca GET desteklenir.'}, 405);
-    if (url.pathname === '/api/health') return json({ok:true, version:'0.6.0'});
+    if (url.pathname === '/api/health') return json({ok:true, version:'0.6.1'});
     if (url.pathname !== '/api/quotes') return json({error:'Bulunamadı.'}, 404);
     // Cache one upstream read per edge location for five minutes.
     const cacheKey = new Request(`${url.origin}/internal/quotes-v6`);
