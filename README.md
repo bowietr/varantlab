@@ -1,11 +1,11 @@
 # VarantLab
 
-Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.1.0**.
+Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.2.0**.
 
 ## Kapsam
 
-- İnfo Varant fiyat izleme sayfasının sunucu tarafından oluşturulmuş ilk tablosunu okur. Tüm varantları veya tüm ihraççıları kapsamaz.
-- Kod/dayanak arama, alım/satım türü filtresi, vade, kullanım fiyatı, dayanak fiyatı, alış/satış, spread ve ayrı piyasa yapıcı kotasyonları.
+- İnfo Varant fiyat izleme sayfasının herkese açık csvData listesini okur. Kaynağın tüm varantlarını kapsar; diğer ihraççıların tamamını kapsamaz. 43 dayanak / 1.301 varant geliştirme sırasında doğrulandı; sayılar zamanla değişir.
+- Dayanak seçimi, 50 kayıtlı sayfalama, kod/dayanak arama, alım/satım türü filtresi, vade, kullanım fiyatı, dayanak fiyatı, alış/satış, spread ve ayrı piyasa yapıcı kotasyonları.
 - Demo fiyat üretmez. Kaynak hatası veya tablo değişikliği olduğunda hata gösterir.
 - Kaynak, üye girişi olmadan 15 dakika gecikmeli veri sunar. Ek önbellek süresi 5 dakikadır; verinin tam olarak 15 dakika eski olduğu garanti edilmez.
 - Kaynağın çekildiği zaman ile fiyatın oluştuğu zaman farklıdır. Fiyat zamanı doğrulanmadığı için `quoteTime: null` döner.
@@ -42,7 +42,7 @@ npm run dev
 
 Bu sürüm veri bağlantısı testidir. Web sayfasını teknik olarak okumak, açık API veya yeniden yayınlama izni olduğu anlamına gelmez. Kaynak kullanım koşulları ve yeniden yayınlama izni doğrulanmış değildir. Daha geniş yayına geçmeden bu konu netleştirilmelidir. Kaynak sayfa yapısı değişirse dönüştürücü güncellenmelidir. Cloudflare çıkış IP'lerinden erişim henüz test edilmemiştir.
 
-Sonraki adımlar: Cloudflare bağlantı testi, fiyat zamanını doğrulama, tüm listeye erişimin incelenmesi ve veri kapsamının genişletilmesi. Geçmiş mum verileri, teknik sinyaller, backtest, hesap senkronizasyonu ve gerçek emir iletimi bu sürüme dahil değildir.
+Sonraki adımlar: Cloudflare bağlantı testi, fiyat zamanını doğrulama, diğer ihraççılarla veri kapsamının genişletilmesi. Geçmiş mum verileri, teknik sinyaller, backtest, hesap senkronizasyonu ve gerçek emir iletimi bu sürüme dahil değildir.
 
 Kaynaklar:
 - https://infovarant.com/piyasa/varant-fiyat-izleme
