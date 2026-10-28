@@ -1,3 +1,4 @@
+import {gearing,daysToExpiry} from './ranking.js';
 import {PERIODS,validHistory,periodReturn} from './history.js';
 const el=id=>document.getElementById(id);
 const symbol=new URLSearchParams(location.search).get('symbol')?.toUpperCase();
@@ -47,7 +48,7 @@ async function load() {
   const q=data.quotes.find(q=>q.symbol===symbol);if(!q)throw new Error('Bu varant güncel kaynak listesinde bulunamadı. Vadesi dolmuş veya listeden çıkarılmış olabilir.');
   el('subtitle').textContent=`${q.underlying} · ${q.type==='CALL'?'Alım':'Satım'} varantı`;
   el('facts').replaceChildren();
-  const facts=[['Son fiyat',fmt(q.lastPrice)+' TL'],['Alış',fmt(q.bid)+' TL'],['Satış',fmt(q.ask)+' TL'],['Makas',percent(q.spreadPercent)],['Dayanak fiyatı',fmt(q.underlyingPrice)+' (kaynak birimi)'],['Kullanım fiyatı',fmt(q.strike)],['Vade',q.expiry.split('-').reverse().join('.')],['Çarpan',fmt(q.multiplier)],['P.Y. alış',fmt(q.marketMakerBid)+' TL'],['P.Y. satış',fmt(q.marketMakerAsk)+' TL']];
+  const facts=[['Son fiyat',fmt(q.lastPrice)+' TL'],['Kalan takvim günü',String(daysToExpiry(q.expiry)??'—')],['Basit kaldıraç · delta hariç',fmt(gearing(q))],['Alış',fmt(q.bid)+' TL'],['Satış',fmt(q.ask)+' TL'],['Makas',percent(q.spreadPercent)],['Dayanak fiyatı',fmt(q.underlyingPrice)+' (kaynak birimi)'],['Kullanım fiyatı',fmt(q.strike)],['Vade',q.expiry.split('-').reverse().join('.')],['Çarpan',fmt(q.multiplier)],['P.Y. alış',fmt(q.marketMakerBid)+' TL'],['P.Y. satış',fmt(q.marketMakerAsk)+' TL']];
   for(const [label,value]of facts){const card=document.createElement('article'),span=document.createElement('span'),strong=document.createElement('strong');span.textContent=label;strong.textContent=value;card.append(span,strong);el('facts').append(card);}
   el('daily').textContent=percent(q.changePercent);
   const time=Date.parse(data.fetchedAt);if(Number.isFinite(time)&&Number.isFinite(q.lastPrice)&&q.lastPrice>0){points=validHistory([...points,{time,price:q.lastPrice}]);try{localStorage.setItem(key,JSON.stringify(points));}catch{storageOK=false;}}

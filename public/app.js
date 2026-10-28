@@ -1,3 +1,4 @@
+import {gearing,daysToExpiry,sortQuotes} from './ranking.js';
 import {calculatePosition} from './calculator.js';
 const el = id => document.getElementById(id);
 let quotes = [];
@@ -13,18 +14,24 @@ function render() {
   const validAmount = Number.isFinite(amount) && amount > 0 && amount <= 1e9;
   el('budgetError').hidden = validAmount;
   el('budgetError').textContent = validAmount ? '' : '0 ile 1 milyar TL arasında pozitif bir işlem tutarı girin.';
-  const ranking = el('sort').value === 'spread';
+  const mode=el('sort').value;
+  const ranking = ['spread','gearing'].includes(mode);
   const comparable = !!el('underlying').value && !!el('type').value;
-  el('sortNote').textContent = ranking ? (comparable ? 'Aynı dayanak ve yönde, bütçeyle en az 1 adet alınabilen ve geçerli alış/satışı olan ürünler makas yüzdesine göre sıralanır. Bu bir başarı veya toplam kalite puanı değildir; delta, teta ve derinlik henüz dahil değil.' : 'Makas karşılaştırması için bir dayanak ve Alım/Satım türü seçin.') : '';
+  const notes={
+    symbol:'',
+    dailyDesc:'Kaynağın gerçekleşmiş günlük değişimi, yüksekten düşüğe. Gelecekteki getiri tahmini değildir.',
+    dailyAsc:'Kaynağın gerçekleşmiş günlük değişimi, düşükten yükseğe. Düşen ürünün toparlanacağı anlamına gelmez.',
+    expiryAsc:'Vadeye kalan takvim günü, azdan çoğa. Yakın vade daha avantajlı anlamına gelmez.',
+    expiryDesc:'Vadeye kalan takvim günü, çoktan aza. Daha uzak vade tek başına düşük risk garantisi değildir.',
+    spread:'Aynı dayanak ve yönde, bütçeye uygun geçerli kotasyonlar makas yüzdesine göre sıralanır. Kazanma olasılığı puanı değildir.',
+    gearing:'Basit kaldıraç = dayanak fiyatı × çarpan / satış fiyatı. Yalnızca tanımlı TL dayanaklarında hesaplanır. Delta içermediği için etkin kaldıraç, beklenen getiri veya gerçek fiyat hassasiyeti değildir. Yüksek değer düşük fiyatlı, derin zararda ve çok riskli ürünleri öne çıkarabilir. Vade ve makası birlikte kontrol edin.'
+  };
+  el('sortNote').textContent=ranking&&!comparable?'Karşılaştırma için aynı dayanak ve Alım/Satım türünü seçin.':notes[mode]||'';
+
 
   const term = el('search').value.toLocaleUpperCase('tr-TR').trim();
   let selected = quotes.filter(q => `${q.symbol} ${q.underlying}`.toLocaleUpperCase('tr-TR').includes(term) && (!el('type').value || q.type === el('type').value) && (!el('underlying').value || q.underlying === el('underlying').value));
-  if (ranking) {
-    selected = comparable && validAmount ? selected.filter(q => {
-      const position = calculatePosition(amount,q.bid,q.ask);
-      return position && position.quantity > 0 && position.spreadPercent !== null;
-    }).sort((a,b) => ((a.ask-a.bid)/a.ask)-((b.ask-b.bid)/b.ask) || a.symbol.localeCompare(b.symbol)) : [];
-  } else selected.sort((a,b)=>a.symbol.localeCompare(b.symbol));
+  selected=sortQuotes(selected,mode,{amount:validAmount?amount:NaN,underlying:el('underlying').value,type:el('type').value});
   const pages = Math.max(1, Math.ceil(selected.length / pageSize));
   page = Math.min(page, pages);
   el('pageInfo').textContent = `${selected.length} kayıt · Sayfa ${page} / ${pages}`;
@@ -33,7 +40,7 @@ function render() {
   for (const q of selected.slice((page-1)*pageSize, page*pageSize)) {
     const tr = document.createElement('tr');
     const position = validAmount ? calculatePosition(amount,q.bid,q.ask) : null;
-    const values = [q.symbol, q.type === 'CALL' ? 'Alım' : 'Satım', q.expiry.split('-').reverse().join('.'), fmt(q.strike), fmt(q.underlyingPrice), fmt(q.bid), fmt(q.ask), fmt(q.spreadPercent), position ? new Intl.NumberFormat('tr-TR').format(position.quantity) : '—', fmt(position?.invested ?? null), fmt(position?.remaining ?? null), fmt(position?.spreadLoss ?? null), fmt(q.marketMakerBid), fmt(q.marketMakerAsk)];
+    const values = [q.symbol, q.type === 'CALL' ? 'Alım' : 'Satım', q.expiry.split('-').reverse().join('.'), fmt(q.strike), fmt(q.underlyingPrice), fmt(q.bid), fmt(q.ask), fmt(q.spreadPercent), fmt(q.changePercent), daysToExpiry(q.expiry) ?? '—', fmt(gearing(q)), position ? new Intl.NumberFormat('tr-TR').format(position.quantity) : '—', fmt(position?.invested ?? null), fmt(position?.remaining ?? null), fmt(position?.spreadLoss ?? null), fmt(q.marketMakerBid), fmt(q.marketMakerAsk)];
     values.forEach((value, i) => {
       const td = document.createElement('td'); td.textContent = value;
       if (i === 0) { const link=document.createElement('a'); link.href='/varant.html?symbol='+encodeURIComponent(q.symbol); link.textContent=q.symbol; td.textContent='';td.append(link); const small = document.createElement('small'); small.textContent = q.underlying; td.append(small); }
