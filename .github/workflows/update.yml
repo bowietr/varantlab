@@ -1,0 +1,75 @@
+name: Apply update.zip
+
+on:
+  push:
+    branches: [main]
+    paths: [update.zip]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-update-zip
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - name: Validate and extract update.zip
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import stat
+          import zipfile
+
+          root = Path.cwd().resolve()
+          allowed_dirs = {"src", "public", "test"}
+          allowed_files = {"package.json", "package-lock.json", "wrangler.jsonc", "README.md", ".gitignore"}
+          with zipfile.ZipFile("update.zip") as archive:
+              entries = archive.infolist()
+              if len(entries) > 1000 or sum(e.file_size for e in entries) > 25_000_000:
+                  raise SystemExit("ZIP exceeds file count or size limit")
+              accepted = []
+              seen = set()
+              for entry in entries:
+                  name = entry.filename
+                  path = PurePosixPath(name)
+                  if path.is_absolute() or ".." in path.parts or "\\" in name:
+                      raise SystemExit(f"Invalid ZIP path: {name}")
+                  if entry.is_dir():
+                      continue
+                  if stat.S_ISLNK(entry.external_attr >> 16):
+                      raise SystemExit(f"Symlink rejected: {name}")
+                  if not path.parts or not (
+                      path.parts[0] in allowed_dirs or name in allowed_files
+                  ):
+                      raise SystemExit(f"Unsupported file: {name}. Put app files at ZIP root.")
+                  destination = (root / name).resolve()
+                  if not destination.is_relative_to(root) or destination in seen:
+                      raise SystemExit(f"Invalid or duplicate target: {name}")
+                  seen.add(destination)
+                  accepted.append((entry, destination))
+              if not accepted:
+                  raise SystemExit("ZIP has no application files")
+              for entry, destination in accepted:
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  destination.write_bytes(archive.read(entry))
+              print(f"Applied {len(accepted)} files")
+          PY
+      - name: Commit application changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No application changes"
+            exit 0
+          fi
+          git commit -m "Apply application files from update.zip"
+          git push origin HEAD:main
