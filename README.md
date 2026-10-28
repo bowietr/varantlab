@@ -1,6 +1,6 @@
 # VarantLab
 
-Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.3.0**.
+Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.4.0**.
 
 ## Kapsam
 
@@ -51,8 +51,14 @@ Kaynaklar:
 
 API anahtarlarını, Cloudflare tokenlarını veya şifreleri depoya eklemeyin.
 
-## İşlem tutarı ve makas karşılaştırması (0.3.0)
+## İşlem tutarı ve makas karşılaştırması (0.4.0)
 
 İşlem tutarı kullanıcı tarafından değiştirilir; varsayılan 1.000 TL'dir. Tutar yalnızca kullanılan tarayıcıda saklanır. Alınabilecek tam adet, satış fiyatıyla kullanılan tutar, kalan para ve aynı kotasyonlarda alış fiyatından hemen çıkışın teorik makas maliyeti hesaplanır. Komisyon, vergi ve fiyat kayması dahil değildir; derinlik bilinmediğinden gerçekleşme garantisi vermez.
 
 Makas sıralaması için aynı dayanak ve aynı yön seçilir. Pozitif ve tutarlı alış/satış kotasyonları ile en az bir adet alınabilen ürünler, yüzdesel makas artan şekilde sıralanır. Vade ön elemesi uygulanmaz. Bu karşılaştırma genel kalite veya kazanma olasılığı puanı değildir. Delta, teta ve kotasyon miktarı eklenmeden kapsamlı gün içi uygunluk puanı üretilmez.
+
+## Varant detay sayfaları (0.4.0)
+
+Her satır ve varant kodu `/varant.html?symbol=AB1KV.V` gibi paylaşılabilir bir detay adresine açılır. Son fiyat ve kaynak günlük değişimi, alış/satış, dayanak, vade, çarpan ve kotasyonlar gösterilir. Kaynağın son fiyatı `sonFiyat` alanından alınır.
+
+Tarihsel borsa fiyat API'si doğrulanamadığı için geçmişe ait haftalık/aylık getiriler henüz sağlanamaz. Grafik, detay sayfası ziyaretlerinde aynı tarayıcıya kaydedilen gerçek son fiyat gözlemlerini gösterir. Kayıt zamanı kaynak fiyat zamanı değildir. Sayfa görünürken beş dakikada bir yenilenir. Tek noktadan çizgi üretilmez; eksik veri tahmin edilmez. 7 ve 30 günlük değişimler yalnızca ilgili başlangıç tarihine ait gözlem mevcutsa hesaplanır. Kayıtlar cihazlar arasında eşitlenmez ve tarayıcı verileri silinirse kaybolur. Gerçek geçmiş seri entegrasyonu bekleyen iştir.

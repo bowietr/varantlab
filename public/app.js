@@ -36,10 +36,12 @@ function render() {
     const values = [q.symbol, q.type === 'CALL' ? 'Alım' : 'Satım', q.expiry.split('-').reverse().join('.'), fmt(q.strike), fmt(q.underlyingPrice), fmt(q.bid), fmt(q.ask), fmt(q.spreadPercent), position ? new Intl.NumberFormat('tr-TR').format(position.quantity) : '—', fmt(position?.invested ?? null), fmt(position?.remaining ?? null), fmt(position?.spreadLoss ?? null), fmt(q.marketMakerBid), fmt(q.marketMakerAsk)];
     values.forEach((value, i) => {
       const td = document.createElement('td'); td.textContent = value;
-      if (i === 0) { const small = document.createElement('small'); small.textContent = q.underlying; td.append(small); }
+      if (i === 0) { const link=document.createElement('a'); link.href='/varant.html?symbol='+encodeURIComponent(q.symbol); link.textContent=q.symbol; td.textContent='';td.append(link); const small = document.createElement('small'); small.textContent = q.underlying; td.append(small); }
       if (i === 1) td.className = q.type.toLowerCase();
       tr.append(td);
     });
+    tr.classList.add('clickable-row');
+    tr.addEventListener('click',event=>{if(!event.target.closest('a'))location.href='/varant.html?symbol='+encodeURIComponent(q.symbol);});
     el('rows').append(tr);
   }
   el('empty').hidden = selected.length > 0;

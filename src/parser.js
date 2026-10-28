@@ -36,7 +36,7 @@ export function parseQuotes(html) {
     const price = key => {const value = numeric(row[key]); return value !== null && value >= 0 ? value : null;};
     const bid = price('alis'), ask = price('satis');
     const quoteAvailable = bid !== null && ask !== null && ask > 0 && bid <= ask;
-    return {symbol:row.varant.slice(0,-1)+'.V', type:row.tur === 'C'?'CALL':'PUT', underlying:row.dayanak, expiry:`${y}-${m}-${d}`, multiplier:price('carpan'), strike:price('kullanimFiyati'), underlyingPrice:price('dayanakValue'), marketMakerBid:price('pyAlis'), marketMakerAsk:price('pySatis'), changePercent:numeric(row.yuzde), bid, ask, spreadPercent:quoteAvailable?(ask-bid)/ask*100:null, quoteAvailable, quoteTime:null};
+    return {symbol:row.varant.slice(0,-1)+'.V', type:row.tur === 'C'?'CALL':'PUT', underlying:row.dayanak, expiry:`${y}-${m}-${d}`, multiplier:price('carpan'), strike:price('kullanimFiyati'), underlyingPrice:price('dayanakValue'), marketMakerBid:price('pyAlis'), marketMakerAsk:price('pySatis'), changePercent:numeric(row.yuzde), lastPrice:price('sonFiyat'), bid, ask, spreadPercent:quoteAvailable?(ask-bid)/ask*100:null, quoteAvailable, quoteTime:null};
   });
   if (new Set(quotes.map(q=>q.symbol)).size !== source.length) throw new Error('Kaynakta tekrar eden varant kodu var.');
   return quotes;
