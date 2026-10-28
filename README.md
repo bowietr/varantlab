@@ -1,6 +1,6 @@
 # VarantLab
 
-Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.5.0**.
+Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.6.0**.
 
 ## Kapsam
 
@@ -51,20 +51,30 @@ Kaynaklar:
 
 API anahtarlarını, Cloudflare tokenlarını veya şifreleri depoya eklemeyin.
 
-## İşlem tutarı ve makas karşılaştırması (0.5.0)
+## İşlem tutarı ve makas karşılaştırması (0.6.0)
 
 İşlem tutarı kullanıcı tarafından değiştirilir; varsayılan 1.000 TL'dir. Tutar yalnızca kullanılan tarayıcıda saklanır. Alınabilecek tam adet, satış fiyatıyla kullanılan tutar, kalan para ve aynı kotasyonlarda alış fiyatından hemen çıkışın teorik makas maliyeti hesaplanır. Komisyon, vergi ve fiyat kayması dahil değildir; derinlik bilinmediğinden gerçekleşme garantisi vermez.
 
 Makas sıralaması için aynı dayanak ve aynı yön seçilir. Pozitif ve tutarlı alış/satış kotasyonları ile en az bir adet alınabilen ürünler, yüzdesel makas artan şekilde sıralanır. Vade ön elemesi uygulanmaz. Bu karşılaştırma genel kalite veya kazanma olasılığı puanı değildir. Delta, teta ve kotasyon miktarı eklenmeden kapsamlı gün içi uygunluk puanı üretilmez.
 
-## Varant detay sayfaları (0.5.0)
+## Varant detay sayfaları (0.6.0)
 
 Her satır ve varant kodu `/varant.html?symbol=AB1KV.V` gibi paylaşılabilir bir detay adresine açılır. Son fiyat ve kaynak günlük değişimi, alış/satış, dayanak, vade, çarpan ve kotasyonlar gösterilir. Kaynağın son fiyatı `sonFiyat` alanından alınır.
 
 Tarihsel borsa fiyat API'si doğrulanamadığı için geçmişe ait haftalık/aylık getiriler henüz sağlanamaz. Grafik, detay sayfası ziyaretlerinde aynı tarayıcıya kaydedilen gerçek son fiyat gözlemlerini gösterir. Kayıt zamanı kaynak fiyat zamanı değildir. Sayfa görünürken beş dakikada bir yenilenir. Tek noktadan çizgi üretilmez; eksik veri tahmin edilmez. 7 ve 30 günlük değişimler yalnızca ilgili başlangıç tarihine ait gözlem mevcutsa hesaplanır. Kayıtlar cihazlar arasında eşitlenmez ve tarayıcı verileri silinirse kaybolur. Gerçek geçmiş seri entegrasyonu bekleyen iştir.
 
-## Sıralamalar (0.5.0)
+## Sıralamalar (0.6.0)
 
 Kod, düşük makas, günlük değişim (artan/azalan), kalan takvim günü (artan/azalan) ve yüksek basit kaldıraç. Makas ve kaldıraç sıralamaları aynı dayanak/yön seçimini gerektirir ve tutarla en az bir adet alınabilen, geçerli kotasyonlu, vadesi geçmemiş ürünleri kapsar. Diğer sıralamalar listeyi yalnızca düzenler.
 
 Basit kaldıraç, bilinen TL dayanakları için `dayanak fiyatı × çarpan / satış fiyatı` olarak hesaplanır. Kur dönüşümü bilinmeyen ürünlerde boş bırakılır. Delta olmadan bu değer etkin kaldıraç, gerçek hassasiyet veya beklenen getiri değildir. Yüksek oran, fiyatı çok düşük / derin zararda ürünleri öne çıkarabilir. Getiri potansiyeli tahmini veya kazanma olasılığı sıralaması henüz sağlanmaz. Eksik metrikler en sona gider. Kaynak: https://infovarant.com/sozluk/kaldirac
+
+## Senaryo fiyatlaması (0.6.0)
+
+Black–Scholes ile temettüsüz Avrupa tipi teorik fiyatlama. Kaynak `faiz` alanı etkin yıllık yüzde kabul edilerek `ln(1+r)` ile sürekli bileşik faize dönüştürülür. Vadeye kalan tam takvim günü / 365 kullanılır; vade gününde saat/uzlaşı belirsiz olduğu için model uygulanmaz. TL cinsinden tanımlı dayanaklar desteklenir. Kaynakta temettü sıfır olarak belirtilmeyen ürünler dışlanır. Temettü sıfır olması doğrulanmış gelecekteki temettü takvimi değildir; kaynaktan gelen varsayımdır. Ürünlerin özel şartları ayrıca teyit edilmelidir.
+
+İma edilen oynaklık, mevcut alış/satış orta fiyatını yeniden üreten model volatilitesi olarak bisection ile bulunur. Bu, ihraççının açıkladığı örtük oynaklık değildir. %0,1–%500 aralığı dışında veya model alt/üst sınırlarını ihlal eden / vega açısından kararsız kotasyonlar dışlanır. Model delta/gamma hesaplanır. Kullanıcının hedef dayanak hareketi, 0–24 saat bekleme süresi ve oynaklık puanı değişimi ile yeniden fiyatlanır. Mutlak makas sabit varsayılır ve tahmini çıkış alış fiyatı 0,01 TL kademesine aşağı yuvarlanır. Alım satış fiyatından yapılır, komisyon her iki işlem için uygulanır; adet giriş komisyonu dahil bütçeye sığdırılır. Vergi ve fiyat kayması dahil değildir.
+
+Sıralama aynı dayanak/yönde **senaryoya bağlı net getiri yüzdesine** göredir; gerçekleşme olasılığı, beklenen değer veya yön tahmini değildir. Ters yönde aynı büyüklükte hareketin sonucu ayrıca gösterilir. Varsayılan ön eleme: en çok %10 makas, en az 0,10 mutlak model delta, en az 15 takvim günü; kullanıcı tümünü değiştirebilir. Bu eşikler doğrulanmış başarı oranına dayanmaz. Kaynak veriler gecikmeli ve tam eşzamanlı değildir; hesapların doğruluğu piyasa başarısı anlamına gelmez.
+
+Kaynaklar: https://infoyatirim.com/urunler/varant ; https://varant.akyatirim.com.tr/rehber/varant/varant-degeri-nelerden-etkilenir ; https://www.optionseducation.org/referencelibrary/faq/technical-information
