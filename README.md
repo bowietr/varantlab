@@ -1,6 +1,6 @@
 # VarantLab
 
-Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.2.0**.
+Gerçek ve gecikmeli verilerle varant izleme prototipi. Sürüm: **0.3.0**.
 
 ## Kapsam
 
@@ -50,3 +50,9 @@ Kaynaklar:
 - https://developers.cloudflare.com/workers/ci-cd/builds/configuration/
 
 API anahtarlarını, Cloudflare tokenlarını veya şifreleri depoya eklemeyin.
+
+## İşlem tutarı ve makas karşılaştırması (0.3.0)
+
+İşlem tutarı kullanıcı tarafından değiştirilir; varsayılan 1.000 TL'dir. Tutar yalnızca kullanılan tarayıcıda saklanır. Alınabilecek tam adet, satış fiyatıyla kullanılan tutar, kalan para ve aynı kotasyonlarda alış fiyatından hemen çıkışın teorik makas maliyeti hesaplanır. Komisyon, vergi ve fiyat kayması dahil değildir; derinlik bilinmediğinden gerçekleşme garantisi vermez.
+
+Makas sıralaması için aynı dayanak ve aynı yön seçilir. Pozitif ve tutarlı alış/satış kotasyonları ile en az bir adet alınabilen ürünler, yüzdesel makas artan şekilde sıralanır. Vade ön elemesi uygulanmaz. Bu karşılaştırma genel kalite veya kazanma olasılığı puanı değildir. Delta, teta ve kotasyon miktarı eklenmeden kapsamlı gün içi uygunluk puanı üretilmez.
