@@ -78,3 +78,7 @@ Black–Scholes ile temettüsüz Avrupa tipi teorik fiyatlama. Kaynak `faiz` ala
 Sıralama aynı dayanak/yönde **senaryoya bağlı net getiri yüzdesine** göredir; gerçekleşme olasılığı, beklenen değer veya yön tahmini değildir. Ters yönde aynı büyüklükte hareketin sonucu ayrıca gösterilir. Varsayılan ön eleme: en çok %10 makas, en az 0,10 mutlak model delta, en az 15 takvim günü; kullanıcı tümünü değiştirebilir. Bu eşikler doğrulanmış başarı oranına dayanmaz. Kaynak veriler gecikmeli ve tam eşzamanlı değildir; hesapların doğruluğu piyasa başarısı anlamına gelmez.
 
 Kaynaklar: https://infoyatirim.com/urunler/varant ; https://varant.akyatirim.com.tr/rehber/varant/varant-degeri-nelerden-etkilenir ; https://www.optionseducation.org/referencelibrary/faq/technical-information
+
+## Sade karşılaştırma ekranı (0.6.2)
+
+Ana ekranda tutar, dayanak ve beklenti seçilir. Varsayılan sıralama senaryoya göre net getiridir. Hareket büyüklüğü pozitif girilir; yükseliş/düşüş işaretini beklenti seçimi belirler. Varsayılan %1 ve 4 saat tek satırda görünür, açılarak değiştirilebilir. Model ve ön eleme ayarları gelişmiş bölümündedir. Listede net sonuç TL/yüzde, ters hareket sonucu TL/yüzde, makas maliyeti ve filtre gerekçesi görünür. Negatif sonuçlar da açıkça gösterilir. Pozitif aday yoksa bu durum belirtilir. Teknik veri sütunları detay sayfasında korunur.

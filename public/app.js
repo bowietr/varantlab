@@ -5,7 +5,7 @@ const el = id => document.getElementById(id);
 let quotes = [];
 let modelCache=new Map();
 const modelFor=q=>{if(!modelCache.has(q.symbol))modelCache.set(q.symbol,calibrate(q));return modelCache.get(q.symbol);};
-const scenarioOptions=()=>({amount:el('amount').valueAsNumber,movePercent:el('scenarioMove').valueAsNumber,hours:el('scenarioHours').valueAsNumber,ivShiftPoints:el('scenarioIV').valueAsNumber,commissionPermille:el('scenarioFee').valueAsNumber});
+const scenarioOptions=()=>({amount:el('amount').valueAsNumber,movePercent:Math.abs(el('scenarioMove').valueAsNumber)*(el('type').value==='PUT'?-1:1),hours:el('scenarioHours').valueAsNumber,ivShiftPoints:el('scenarioIV').valueAsNumber,commissionPermille:el('scenarioFee').valueAsNumber});
 let page = 1;
 const pageSize = 50;
 const fmt = n => n === null || !Number.isFinite(n) ? '—' : new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:3}).format(n);
@@ -19,6 +19,8 @@ function render() {
   el('budgetError').hidden = validAmount;
   el('budgetError').textContent = validAmount ? '' : '0 ile 1 milyar TL arasında pozitif bir işlem tutarı girin.';
   const mode=el('sort').value;
+  const move=el('scenarioMove').valueAsNumber,hours=el('scenarioHours').valueAsNumber;
+  el('scenarioSummary').textContent=`Dayanak %${fmt(move)} ${el('type').value==='PUT'?'düşerse':el('type').value==='CALL'?'yükselirse':'hareket ederse'}, ${fmt(hours)} saat sonra`;
   const ranking = ['spread','gearing','scenario'].includes(mode);
   const comparable = !!el('underlying').value && !!el('type').value;
   const notes={
@@ -49,7 +51,7 @@ function render() {
       const result=project(q,model,options);
       if(!result.ok){excluded++;return false;}
       const adverse=project(q,modelFor(q),{...options,movePercent:-options.movePercent});
-      scenarioMap.set(q.symbol,{...result,adverse:adverse.ok?adverse.returnPercent:null});return true;
+      scenarioMap.set(q.symbol,{...result,adverse:adverse.ok?adverse.returnPercent:null,adverseProfit:adverse.ok?adverse.profit:null});return true;
     }).sort((a,b)=>scenarioMap.get(b.symbol).returnPercent-scenarioMap.get(a.symbol).returnPercent||a.symbol.localeCompare(b.symbol)):[];
     if(comparable)el('sortNote').textContent+=` ${excluded} ürün model/veri/filtre kontrolünde dışlandı. Pozitif sonuç yoksa model bu senaryoda kârlı aday bulmamıştır.`;
   } else selected=sortQuotes(selected,mode,{amount:validAmount?amount:NaN,underlying:el('underlying').value,type:el('type').value});
@@ -62,11 +64,18 @@ function render() {
     const tr = document.createElement('tr');
     const scenario=scenarioMap.get(q.symbol);
     const position = scenario ? {quantity:scenario.quantity,invested:scenario.entryCost,remaining:amount-scenario.entryCost,spreadLoss:scenario.quantity*(q.ask-q.bid)} : validAmount ? calculatePosition(amount,q.bid,q.ask) : null;
-    const values = [q.symbol, q.type === 'CALL' ? 'Alım' : 'Satım', q.expiry.split('-').reverse().join('.'), fmt(q.strike), fmt(q.underlyingPrice), fmt(q.bid), fmt(q.ask), fmt(q.spreadPercent), fmt(scenario?.returnPercent??null), fmt(scenario?.profit??null), fmt(scenario?.adverse??null), fmt(scenario?.sigmaPercent??null), fmt(scenario?.delta??null), fmt(q.changePercent), daysToExpiry(q.expiry) ?? '—', fmt(gearing(q)), position ? new Intl.NumberFormat('tr-TR').format(position.quantity) : '—', fmt(position?.invested ?? null), fmt(position?.remaining ?? null), fmt(position?.spreadLoss ?? null), fmt(q.marketMakerBid), fmt(q.marketMakerAsk)];
-    values.forEach((value, i) => {
-      const td = document.createElement('td'); td.textContent = value;
-      if (i === 0) { const link=document.createElement('a'); link.href='/varant.html?symbol='+encodeURIComponent(q.symbol); link.textContent=q.symbol; td.textContent='';td.append(link); const small = document.createElement('small'); small.textContent = q.underlying; td.append(small); }
-      if (i === 1) td.className = q.type.toLowerCase();
+    const resultValues=[
+      q.symbol,
+      scenario ? `${fmt(scenario.profit)} TL` : '—',
+      scenario ? `${fmt(scenario.adverseProfit)} TL` : '—',
+      position ? `${fmt(position.spreadLoss)} TL` : '—',
+      scenario ? `${daysToExpiry(q.expiry)} gün vade · %${fmt(q.spreadPercent)} makas · Seçtiğin filtreleri geçti` : mode==='spread' ? `%${fmt(q.spreadPercent)} makas · Düşükten yükseğe sıralama` : mode.startsWith('daily') ? `%${fmt(q.changePercent)} günlük değişim` : mode.startsWith('expiry') ? `${daysToExpiry(q.expiry)} gün vade` : mode==='gearing' ? `${fmt(gearing(q))} basit kaldıraç · Yüksek risk içerebilir` : 'Güncel kaynak listesinde yer alıyor'
+    ];
+    resultValues.forEach((value,i)=>{
+      const td=document.createElement('td');td.textContent=value;
+      if(i===0){const link=document.createElement('a');link.href='/varant.html?symbol='+encodeURIComponent(q.symbol);link.textContent=q.symbol;td.textContent='';td.append(link);const small=document.createElement('small');small.textContent=`${q.underlying} · ${q.type==='CALL'?'Alım':'Satım'}`;td.append(small);}
+      if((i===1||i===2)&&scenario){const n=i===1?scenario.profit:scenario.adverseProfit;td.className=Number.isFinite(n)?n>0?'positive':n<0?'negative':'':'';const small=document.createElement('small');small.textContent=`%${fmt(i===1?scenario.returnPercent:scenario.adverse)}`;td.append(small);}
+      if(i===3){const small=document.createElement('small');small.textContent='Mevcut kotasyonla giriş–çıkış';td.append(small);}
       tr.append(td);
     });
     tr.classList.add('clickable-row');
@@ -74,6 +83,9 @@ function render() {
     el('rows').append(tr);
   }
   el('empty').hidden = selected.length > 0;
+  el('empty').textContent=ranking&&!comparable?'Önce dayanak ve beklentini seç.':!validAmount?'Geçerli bir işlem tutarı gir.':'Bu ayarlara uyan aday yok. Gelişmiş ayarlardaki filtreleri kontrol edebilirsin.';
+  const positive=mode==='scenario'?selected.filter(q=>scenarioMap.get(q.symbol).profit>0).length:0;
+  el('resultSummary').textContent=mode==='scenario'&&comparable?selected.length?`${selected.length} aday karşılaştırıldı. ${positive?`${positive} adayın senaryo sonucu pozitif.`:'Bu senaryoda maliyet sonrası kazanç gösteren aday yok.'} Sıra, tahmini getiri yüzdesine göredir.`:'Bu senaryoya ve filtrelere uyan aday bulunamadı.':mode==='scenario'?'Başlamak için üç alanı doldur.':'';
 }
 async function load() {
   el('refresh').disabled = true; el('error').hidden = true;
@@ -85,7 +97,7 @@ async function load() {
     if (!Array.isArray(data.quotes)) throw new Error('Veri biçimi doğrulanamadı.');
     quotes = data.quotes; modelCache=new Map();
     const previous = el('underlying').value;
-    el('underlying').replaceChildren(new Option('Tüm dayanaklar', ''));
+    el('underlying').replaceChildren(new Option('Dayanak seç', ''));
     [...new Set(quotes.map(q => q.underlying))].sort((a,b)=>a.localeCompare(b,'tr')).forEach(value => el('underlying').add(new Option(value,value)));
     if ([...el('underlying').options].some(o=>o.value===previous)) el('underlying').value=previous;
     page=1; render();
